@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>To Do List</title>
+		<style type="text/css">
+			ul
+			{
+    			list-style-type: none;
+			}
+			#container {
+				width: 35%;
+				margin: 100px auto;
+				background-color: #d8d8d8;
+				padding: 10px 50px;
+			}
+			#container input[type="button"] {
+				height: 56px;
+				padding: 10px;
+				border: 2px solid #333;
+				background-color: #ff9ea0;
+				font-size: 24px;
+				cursor: pointer;
+				outline: none;
+				width: auto;
+				box-shadow: 2px 2px 4px rgba(0, 0, 0, .6);
+			}
+			#container input[type="button"]:hover {
+				height: 56px;
+				padding: 10px;
+				border: 2px solid #fff;
+				background-color: #ff9ea0;
+				font-size: 24px;
+				cursor: pointer;
+				outline: none;
+				width: auto;
+				color: #fff;
+			}
+			#container ul.sortable {
+				width: 100%;
+				margin: 0 auto;
+				background-color: ;
+			}
+			#toDoItem {
+				width: 200px;
+				height: 25px;
+				margin-right: 40px;
+			}
+			testarea {
+				border: 1px solid #d8d8d8;
+			}
+			textarea:focus, input:focus {
+    			outline: 0;
+    			border: 1px solid red;
+   			}
+			.handle, .removeListItem {
+				-webkit-touch-callout: none;
+				-webkit-user-select: none;
+				-khtml-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+			}
+			#container ul li span.handle {
+				cursor: move;
+			}
+			#container form {
+				margin-bottom: 20px;	
+			}
+			li.disabled {
+				opacity: 0.5;
+			}
+			li.highlight {
+				background: #FEE25F;
+			}
+			a.removeListItem, a.removeListItem:link {
+				color: #A858A3;
+				display: none;
+				float: right;
+				text-decoration: none;
+				font-family: "Arial Black", Gadget, sans-serif;
+			}
+			a.removeListItem:hover {
+				text-decoration: underline;
+			}
+			.sortable input {
+				border: 0;
+				background: transparent;
+				font-family: "Tahoma";
+				font-size: 24px;
+				color: #050DFA;
+				width: 400px;
+			}
+			#doClearAll {
+				display: none;
+			}
+			#clearAll {
+				font-size: 1.5em;
+				color: #000;
+				text-decoration: none;
+				border: 2px solid #000;
+				padding: 5px;
+				background-color: #AEAEBD;
+				box-shadow: 2px 2px 4px rgba(0, 0, 0, .6);
+			}
+			#clearAll:hover {
+				font-size: 1.5em;
+				color: #fff;
+				text-decoration: none;
+				border: 2px solid #fff;
+				padding: 5px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="container">
+			<h1>Sortable To Do List</h1>
+			<form name="form1" method="post" action="">
+				<input type="text" name="toDoItem" id="toDoItem" autofocus>
+				<input type="button" name="addToDo" id="addToDo" value="Add List Item">
+			</form>
+			<ul id="theList" class="sortable list">
+
+			</ul>
+			<p id="doClearAll"><a id="clearAll" href="javascript:void();">Clear List</a></p>			
+		</div>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script type="text/javascript" src="jquery.sortable.min.js"></script>
+		<script type="text/javascript">
+		$(document).ready(function() {
+	var newListItem;
+	var newList = true;
+	var theList = document.getElementById('theList');
+
+	$('#addToDo').on('click', function(e) {
+		e.preventDefault();
+		if (newList == true) {
+			var theValue = $("#toDoItem").val();
+			newListItem = '<li><span class="handle"> :: </span> <input class="listItem" value="' + theValue + '"><a class="removeListItem" style="display: none;" href="#"> X </a> </li>';
+			newList = false;	
+		} else {
+			var theValue = $("#toDoItem").val();
+		    newListItem = $('#theList li:last').clone();
+			newListItem.find('input').attr('value', theValue); 
+		}
+
+		var theCount = $("#theList li").length + 1;
+		if (theCount > 1) {
+			$('#doClearAll').css('display','block');
+		}
+
+		$('#theList').append(newListItem);
+
+
+		$('#toDoItem').val('');
+		$('#toDoItem').focus();
+		$('.sortable').sortable('destroy');
+		$('.sortable').sortable({
+			handle: '.handle'
+		});
+
+		localStorage.setItem('todoListPlus', theList.innerHTML);
+
+	});
+
+	$('input[type="text"]').on('keydown',function(e) {
+		var key = e.charCode ? e.charCode : e.keyCode ? e.keyCode : 0;
+		if(key == 13) {
+			e.preventDefault();
+			var inputs = $(this).closest('form').find(':input:visible');
+			inputs.eq( inputs.index(this) + 1).focus();
+		}
+	});
+
+	$('#theList').on('change', '.listItem',function(e) {
+		currentValue = $(this).val();
+		$(this).attr('value', currentValue);
+		localStorage.setItem('todoListPlus', theList.innerHTML);
+	});
+
+	$('.sortable').sortable().bind('sortupdate', function() {
+		localStorage.setItem('todoListPlus', theList.innerHTML);
+	});
+	
+	$('#theList').on('mouseover', 'li', function() {
+		var $thisA = $(this).find('a');
+		$thisA.css('display', 'block');
+	});
+
+	$('#theList').on('mouseout', 'li', function() {
+		var $thisA = $(this).find('a');
+		$thisA.css('display', 'none');
+	});
+
+	$('#theList').on('click', '.removeListItem', function(e) {
+		e.preventDefault();
+		$(this).parent().remove();
+		localStorage.setItem('todoListPlus', theList.innerHTML);
+	});
+
+	$('#doClearAll').on('click', '#clearAll', function(e) {
+		e.preventDefault();
+		$('#theList').children().remove();
+		newList = true;
+		$('#toDoItem').val('');
+		$('#doClearAll').css('display', 'none');
+		$('#toDoItem').focus();
+		localStorage.setItem('todoListPlus', theList.innerHTML);
+	});
+
+	loadToDo();
+
+	function loadToDo() {
+		if(localStorage.getItem('todoListPlus')) {
+			theList.innerHTML = localStorage.getItem('todoListPlus');
+			$('.sortable').sortable('destroy');
+			$('.sortable').sortable({
+				handle: '.handle'
+		});
+			var theCount = $("#theList li").length + 1;
+			if (theCount > 1) {
+				$('#doClearAll').css('display','block');
+			}
+		}
+	}
+});
+</script>
+	</body>
+</html>
